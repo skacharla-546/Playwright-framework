@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(node -e 'let d=\"\";process.stdin.on\\(\"data\",c=>d+=c\\).on\\(\"end\",\\(\\)=>{try{const j=JSON.parse\\(d\\);console.log\\(j.tool_input&&j.tool_input.file_path||\"\"\\)}catch\\(e\\){console.log\\(\"\"\\)}}\\)')",
+      "Bash(npm install *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)"
+    ]
+  }
+}

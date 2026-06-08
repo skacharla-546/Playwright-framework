@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright *)",
+      "Bash(npx ts-node *)",
+      "Bash(node -e ' *)",
+      "Bash(cd \"d:/Satish/projects/AdvancedPlaywrightFramework1X\" && rm -rf logs && echo \"demo logs/ removed\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Satish\\projects\\AdvancedPlaywrightFramework1X\\logs"
+    ]
+  }
+}
