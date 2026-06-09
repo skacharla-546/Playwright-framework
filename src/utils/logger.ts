@@ -1,54 +1,57 @@
 import winston from 'winston';
 import path from 'path';
+import fs from 'fs';
 
-// Define log directory
 const logDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
 
-// Create logger instance
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
+const consoleFormat = winston.format.combine(
+    winston.format.colorize(),
+    winston.format.timestamp({ format: 'HH:mm:ss' }),
+    winston.format.printf(({ level, message, timestamp, scope }) => {
+        const tag = scope ? `[${scope}] ` : '';
+        return `${timestamp} ${level}: ${tag}${message}`;
+    }),
+);
+
+const fileFormat = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
-    winston.format.splat(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'playwright-tests' },
-  transports: [
-    // Console transport
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.printf(({ level, message, timestamp, ...meta }) => {
-          const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
-          return `${timestamp} [${level}] ${message} ${metaStr}`;
-        })
-      ),
-    }),
-    // File transport - all logs
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-    // File transport - error logs
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-  ],
+    winston.format.json(),
+);
+
+const rootLogger = winston.createLogger({
+    level: process.env.LOG_LEVEL ?? 'info',
+    defaultMeta: { service: 'ttacart-tests' },
+    transports: [
+        new winston.transports.Console({ format: consoleFormat }),
+        new winston.transports.File({
+            filename: path.join(logDir, 'combined.log'),
+            format: fileFormat,
+            maxsize: 5_242_880,
+            maxFiles: 5,
+        }),
+        new winston.transports.File({
+            filename: path.join(logDir, 'error.log'),
+            level: 'error',
+            format: fileFormat,
+            maxsize: 5_242_880,
+            maxFiles: 5,
+        }),
+    ],
 });
 
-// Log unhandled exceptions
-logger.exceptions.handle(
-  new winston.transports.File({ filename: path.join(logDir, 'exceptions.log') })
+rootLogger.exceptions.handle(
+    new winston.transports.File({ filename: path.join(logDir, 'exceptions.log') }),
 );
 
-// Log unhandled rejections
-logger.rejections.handle(
-  new winston.transports.File({ filename: path.join(logDir, 'rejections.log') })
+rootLogger.rejections.handle(
+    new winston.transports.File({ filename: path.join(logDir, 'rejections.log') }),
 );
 
-export default logger;
+/** Returns a child logger tagged with [scope] in every log line. */
+export function getLogger(scope: string): winston.Logger {
+    return rootLogger.child({ scope });
+}
+
+export default rootLogger;
