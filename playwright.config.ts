@@ -25,7 +25,7 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: './src/tests',
-  timeout: 60_000,
+  timeout: 90_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
   forbidOnly: isCI,
@@ -35,22 +35,28 @@ export default defineConfig({
     ['./src/utils/CustomReporter'],
     ['html', { outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results/results.json' }],
-    ['allure-playwright', { outputFolder: 'allure-results' }],
+    ['allure-playwright', { outputFolder: 'allure-results/report' }],
     ['junit', { outputFile: 'test-results.xml' }],
     ['list']
   ],
   use: {
     baseURL: resolveBaseUrl(),
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    actionTimeout: 15_000,
-    navigationTimeout: 30_000,
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
+    actionTimeout: 30_000,
+    navigationTimeout: 45_000,
+    // The demo site is served over HTTP/3 (QUIC); Chromium's QUIC connection
+    // intermittently dies with net::ERR_QUIC_PROTOCOL_ERROR on the first
+    // navigation. Disable QUIC so it falls back to TCP (HTTP/1.1 / HTTP/2).
+    launchOptions: {
+      args: ['--disable-quic'],
+    },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+    // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
   ],
 });

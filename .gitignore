@@ -10,7 +10,9 @@ node_modules/
 # Build & reports
 dist/
 allure-results/
+allure-report/
 tta-report/
+test-results.xml
 logs/
 
 # Env

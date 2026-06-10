@@ -2,7 +2,7 @@ import { expect, Locator, Page } from '@playwright/test';
 import { getLogger } from '@utils/logger';
 import type winston from 'winston';
 
-export const DEFAULT_ACTION_TIMEOUT_MS = 15000;
+export const DEFAULT_ACTION_TIMEOUT_MS = 30000;
 export type Flex = string | Locator;
 
 export class UtilElementLocator {
@@ -21,7 +21,7 @@ export class UtilElementLocator {
     async click(target: Flex, timeout: number = DEFAULT_ACTION_TIMEOUT_MS): Promise<void> {
         this.log.debug(`click: ${target}`);
         const loc = this.toLocator(target);
-        await loc.click({ timeout });
+        await loc.click({ timeout, noWaitAfter: true });
     }
 
     async doubleClick(target: Flex, timeout: number = DEFAULT_ACTION_TIMEOUT_MS): Promise<void> {

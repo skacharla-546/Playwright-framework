@@ -23,26 +23,29 @@ A production-ready end-to-end test automation framework built with **Playwright*
 src/
 ├── api/          # API clients (REST helpers)
 ├── config/       # Environment & config loaders
+│   └── credentials.ts        # Login creds sourced from .env
 ├── fixtures/     # Reusable Playwright fixtures
+│   └── test-base.ts          # Custom `test` pre-wired with all page objects
 ├── pages/        # Page Object Models
 │   ├── BasePage.ts
 │   ├── LoginPage.ts
 │   ├── InventoryPage.ts
+│   ├── ItemDetailPage.ts
 │   ├── CartPage.ts
 │   ├── CheckOutStepOnePage.ts
 │   ├── CheckOutStepTwoPage.ts
-│   ├── CheckOutCompletePage.ts
-│   └── ItemDetailPage.ts
+│   └── CheckOutCompletePage.ts
 ├── testdata/     # JSON / CSV / XLSX test data files
 ├── tests/        # Test specs
-│   └── login.spec.ts
+│   ├── login.spec.ts
+│   └── e2e-checkout.spec.ts  # Full login → cart → checkout flow
 └── utils/        # Shared helpers
-    ├── DataGenerator.ts   # Faker-backed fake data
-    ├── logger.ts          # Winston logger (scoped)
-    └── UtilElementLocator.ts  # Playwright action wrappers
+    ├── DataGenerator.ts       # Faker-backed fake data
+    ├── logger.ts              # Winston logger (scoped)
+    ├── UtilElementLocator.ts  # Playwright action wrappers
+    └── CustomReporter.ts      # TTA custom HTML reporter
 rules/
-├── README.md
-└── test-quality-checks.md   # Quality gates for every test change
+└── test-quality-checks.md     # Quality gates for every test change
 ```
 
 ---
@@ -67,7 +70,17 @@ Copy `.env.example` to `.env` and set your values:
 
 ```bash
 BASE_URL=https://app.thetestingacademy.com
+STANDARD_USER=standard_user
+TTA_SECRET=tta_secret
 LOG_LEVEL=info
+```
+
+Credentials are read through [`src/config/credentials.ts`](src/config/credentials.ts) so specs never hard-code logins:
+
+```typescript
+import { credentials } from '@config/credentials';
+
+await loginPage.loginAs(credentials.standardUser, credentials.password);
 ```
 
 ---
@@ -141,7 +154,28 @@ export class LoginPage extends BasePage {
 `BasePage` provides:
 - `this.el` — `UtilElementLocator` (click, fill, getText, isVisible, waits, …)
 - `this.log` — scoped Winston logger
-- `this.goto(path)` — navigation with page-load wait
+- `this.goto(path)` — navigation that waits for `domcontentloaded`
+
+---
+
+## Fixtures
+
+[`src/fixtures/test-base.ts`](src/fixtures/test-base.ts) extends Playwright's `test` with a
+fixture for every page object, so specs receive ready-constructed pages instead of
+calling `new LoginPage(page)` everywhere:
+
+```typescript
+import { test, expect } from '@fixtures/test-base';
+
+test('checkout flow', async ({ loginPage, inventoryPage, cartPage }) => {
+    await loginPage.open();
+    await loginPage.loginAs(credentials.standardUser, credentials.password);
+    await inventoryPage.open();
+    await inventoryPage.addToCart('tta-bike-light');
+    await inventoryPage.openCart();
+    await cartPage.assertLoaded();
+});
+```
 
 ---
 
@@ -189,3 +223,12 @@ Configured in `tsconfig.json`:
 ## CI/CD
 
 GitHub Actions workflow at `.github/workflows/playwright.yml` runs on every push and pull request.
+
+---
+
+## Troubleshooting
+
+**`net::ERR_QUIC_PROTOCOL_ERROR` on the first navigation** — the demo site is served over
+HTTP/3 (QUIC) and Chromium's QUIC connection can drop intermittently. The config launches
+Chromium with `--disable-quic` (see `use.launchOptions` in `playwright.config.ts`) to force a
+TCP fallback. Remove that flag if you target a host where QUIC is stable.
