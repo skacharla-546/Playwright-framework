@@ -12,6 +12,7 @@ import { test, expect } from '@fixtures/test-base';
 import { DataGenerator } from '@utils/DataGenerator';
 import { credentials } from '@config/credentials';
 import { getLogger } from '@utils/logger';
+import { stepWithShot } from '@utils/reportStep';
 import path from 'path'
 import { readCSV } from '@utils/csvReader';
 
@@ -22,8 +23,8 @@ test.describe('TTTA Cart - Checkout Flow', () => {
 
     // const testData = readCSV(path.join(__dirname, '../data/checkout-test-data.csv'));
 
-    test.beforeEach(async ({ loginPage }) => {
-        await test.step('Log in as standard_user', async () => {
+    test.beforeEach(async ({ loginPage, page }) => {
+        await stepWithShot('Log in as standard_user', page, async () => {
             log.info('Logging in as standard_user');
             await loginPage.open();
             await loginPage.loginAs(credentials.standardUser, credentials.password);
@@ -31,19 +32,20 @@ test.describe('TTTA Cart - Checkout Flow', () => {
     });
 
     test('checkout flow @p0', async ({
+        page,
         inventoryPage,
         cartPage,
         checkoutStepOnePage,
         checkoutStepTwoPage,
         checkoutCompletePage,
     }) => {
-        await test.step('Add an item to the cart', async () => {
+        await stepWithShot('Add an item to the cart', page, async () => {
             log.info(`Opening inventory page and adding item "${ITEM_ID}" to the cart`);
             await inventoryPage.open();
             await inventoryPage.addToCart(ITEM_ID);
         });
 
-        await test.step('Go to the cart and start checkout', async () => {
+        await stepWithShot('Go to the cart and start checkout', page, async () => {
             log.info('Opening cart and verifying contents');
             await inventoryPage.openCart();
             await cartPage.assertLoaded();
@@ -52,7 +54,7 @@ test.describe('TTTA Cart - Checkout Flow', () => {
             await cartPage.checkout();
         });
 
-        await test.step('Fill in customer details', async () => {
+        await stepWithShot('Fill in customer details', page, async () => {
             const guest = DataGenerator.checkoutCustomer();
             log.info(`Filling checkout step one with guest details: ${JSON.stringify(guest)}`);
             await checkoutStepOnePage.assertLoaded();
@@ -60,14 +62,14 @@ test.describe('TTTA Cart - Checkout Flow', () => {
             await checkoutStepOnePage.continue();
         });
 
-        await test.step('Verify order summary and finish', async () => {
+        await stepWithShot('Verify order summary and finish', page, async () => {
             log.info('Verifying order summary on checkout step two');
             await checkoutStepTwoPage.assertLoaded();
             log.info('Finishing the order');
             await checkoutStepTwoPage.finish();
         });
 
-        await test.step('Verify the order confirmation page', async () => {
+        await stepWithShot('Verify the order confirmation page', page, async () => {
             log.info('Verifying order confirmation page');
             await checkoutCompletePage.assertOrderComplete();
         });
