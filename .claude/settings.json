@@ -8,7 +8,16 @@
       "Bash(npm install *)",
       "Bash(git init *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git -c http.sslVerify=false push -u origin master)",
+      "Bash(touch src/api/.gitkeep src/config/.gitkeep src/fixtures/.gitkeep src/pages/.gitkeep src/testdata/.gitkeep)",
+      "Bash(git -c http.sslVerify=false push)",
+      "Bash(npm run *)",
+      "Bash(start d:/Satish/projects/AdvancedPlaywrightFramework1X/tta-report/report_20260609_112029.html)",
+      "Bash(git rm *)",
+      "Bash(git -c http.sslVerify=false push origin master)"
     ]
   }
 }

@@ -12,11 +12,15 @@ import { test, expect } from '@fixtures/test-base';
 import { DataGenerator } from '@utils/DataGenerator';
 import { credentials } from '@config/credentials';
 import { getLogger } from '@utils/logger';
+import path from 'path'
+import { readCSV } from '@utils/csvReader';
 
 const log = getLogger('e2e-checkout.spec');
 const ITEM_ID = 'tta-bike-light';
 
 test.describe('TTTA Cart - Checkout Flow', () => {
+
+    // const testData = readCSV(path.join(__dirname, '../data/checkout-test-data.csv'));
 
     test.beforeEach(async ({ loginPage }) => {
         await test.step('Log in as standard_user', async () => {
